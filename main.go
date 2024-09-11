@@ -1,31 +1,43 @@
 package main
 
 import (
-	"firstGolang/api"
-	"firstGolang/environment/config"
-	"firstGolang/environment/upload"
-	postgres "firstGolang/postgres/connection"
+	"context"
+	"firstGolang/adapters/config"
+	"firstGolang/adapters/connection"
+	"firstGolang/infrastructure"
 	"fmt"
-	"github.com/gorilla/mux"
-	"net/http"
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
-	Routes := mux.NewRouter()
-	Routes.HandleFunc("/prueba", api.HomeHandler)
-
-	upload.UploadEnv()
-
-	postgres.NewConnectPostgres()
-	environment := config.GetEnvironment()
-
-	fmt.Printf("Server listening in port : %v", environment.ServerPort)
-
-	err := http.ListenAndServe(fmt.Sprintf(":%v", environment.ServerPort), Routes)
+	err := infrastructure.LoadEnv()
 	if err != nil {
-		fmt.Sprintln("Error initializing the server")
+		fmt.Println("Error loading .env:", err)
 		return
 	}
-}
 
-// run project --> air
+	envConfig := config.NewEnvAdapter()
+
+	// host := envConfig.GetHost()
+	serverPort := envConfig.GetServerPort()
+	databaseUrl := envConfig.GetPostgrestUrl()
+
+	// databaseUrl := fmt.Sprintf("postgres://%s", host)
+	// fmt.Println("serverPort: ", serverPort)
+	// fmt.Println("databaseUrl: ", databaseUrl)
+
+	conn, err := connection.ConnectToPostgres(databaseUrl)
+	if err != nil {
+		fmt.Println("Error connecting to database:", err)
+		return
+	}
+
+	defer func(conn *pgx.Conn, ctx context.Context) {
+		err := conn.Close(ctx)
+		if err != nil {
+			fmt.Println("Error connecting to database:", err)
+		}
+	}(conn, context.Background())
+
+	infrastructure.StartHTTPServer(serverPort)
+}
