@@ -1,5 +1,5 @@
 package user
 
-func userRoutes() {
+func UserRoutes() {
 
 }

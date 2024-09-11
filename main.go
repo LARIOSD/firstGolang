@@ -2,8 +2,9 @@ package main
 
 import (
 	"firstGolang/api"
-	"firstGolang/config"
-	"firstGolang/database"
+	"firstGolang/environment/config"
+	"firstGolang/environment/upload"
+	postgres "firstGolang/postgres/connection"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -11,11 +12,11 @@ import (
 
 func main() {
 	Routes := mux.NewRouter()
-	Routes.HandleFunc("/", api.HomeHandler)
+	Routes.HandleFunc("/prueba", api.HomeHandler)
 
-	config.LoadEnv()
-	database.PostgresConnection()
+	upload.UploadEnv()
 
+	postgres.NewConnectPostgres()
 	environment := config.GetEnvironment()
 
 	fmt.Printf("Server listening in port : %v", environment.ServerPort)
@@ -26,3 +27,5 @@ func main() {
 		return
 	}
 }
+
+// run project --> air
