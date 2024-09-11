@@ -24,6 +24,7 @@ go.work
 .env
 
 /.vscode
+/.idea
 /tmp
 
 # FIle autogenered
